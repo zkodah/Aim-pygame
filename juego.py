@@ -3,8 +3,11 @@ import random
 import sys
 from configuracion import *
 from Funciones import draw_text
+from pausa import mostrar_menu_pausa
+from sens_menu import pedir_configuracion  # O como hayas llamado a tu menú de configuración
 
-def juego(screen, cantidad_objetivos, font, clock):
+
+def juego(screen, cantidad_objetivos, sensibilidad, font, clock):
     pygame.mouse.set_visible(False)
     pygame.event.set_grab(True)
 
@@ -26,6 +29,18 @@ def juego(screen, cantidad_objetivos, font, clock):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    opcion = mostrar_menu_pausa(screen, font)
+                    if opcion == 0:  # Reanudar
+                        continue
+                    elif opcion == 1:  # Cambiar sensibilidad
+                        _, nueva_sens = pedir_configuracion(screen, font)
+                        sensibilidad = nueva_sens
+                    elif opcion == 2:  # Salir al menú principal
+                        return
+
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 total_clicks += 1
                 distance = ((crosshair_pos[0] - target_pos[0]) ** 2 + (crosshair_pos[1] - target_pos[1]) ** 2) ** 0.5
@@ -39,8 +54,8 @@ def juego(screen, cantidad_objetivos, font, clock):
                     misses += 1
 
         rel = pygame.mouse.get_rel()
-        crosshair_pos[0] += rel[0] * SENSIBILIDAD
-        crosshair_pos[1] += rel[1] * SENSIBILIDAD
+        crosshair_pos[0] += rel[0] * sensibilidad
+        crosshair_pos[1] += rel[1] * sensibilidad
 
         crosshair_pos[0] = max(0, min(WIDTH, crosshair_pos[0]))
         crosshair_pos[1] = max(0, min(HEIGHT, crosshair_pos[1]))
