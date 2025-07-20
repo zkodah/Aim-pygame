@@ -4,8 +4,8 @@ import sys
 from configuracion import *
 from Funciones import draw_text
 from pausa import mostrar_menu_pausa
-from sens_menu import pedir_configuracion  # O como hayas llamado a tu menú de configuración
-
+from sens_menu import pedir_configuracion
+from escenario import draw_hud, Particula
 
 def juego(screen, cantidad_objetivos, sensibilidad, font, clock):
     pygame.mouse.set_visible(False)
@@ -19,6 +19,8 @@ def juego(screen, cantidad_objetivos, sensibilidad, font, clock):
     misses = 0
     total_clicks = 0
     start_time = pygame.time.get_ticks()
+
+    particulas = []
 
     running = True
     while running:
@@ -48,6 +50,8 @@ def juego(screen, cantidad_objetivos, sensibilidad, font, clock):
                     score += 1
                     target_pos = (random.randint(TARGET_RADIUS, WIDTH - TARGET_RADIUS),
                                   random.randint(TARGET_RADIUS, HEIGHT - TARGET_RADIUS))
+                    for _ in range(8):  # Crea partículas de impacto
+                        particulas.append(Particula(target_pos))
                     if score >= cantidad_objetivos:
                         running = False
                 else:
@@ -60,19 +64,25 @@ def juego(screen, cantidad_objetivos, sensibilidad, font, clock):
         crosshair_pos[0] = max(0, min(WIDTH, crosshair_pos[0]))
         crosshair_pos[1] = max(0, min(HEIGHT, crosshair_pos[1]))
 
+        # Dibujo en pantalla
         screen.fill(WHITE)
+
+        for p in particulas[:]:
+            p.update()
+            p.draw(screen)
+            if p.life <= 0:
+                particulas.remove(p)
+
         pygame.draw.circle(screen, RED, target_pos, TARGET_RADIUS)
         pygame.draw.circle(screen, BLACK, (int(crosshair_pos[0]), int(crosshair_pos[1])), 5)
 
-        draw_text(screen, f"Aciertos: {score}  Fallos: {misses}  Objetivos restantes: {cantidad_objetivos - score}", 20)
-        draw_text(screen, f"Tiempo: {elapsed_time:.2f}s", 60)
+        draw_hud(screen, score, misses, cantidad_objetivos - score, elapsed_time, font)
 
         pygame.display.flip()
 
     pygame.mouse.set_visible(True)
     pygame.event.set_grab(False)
     mostrar_resultado(screen, score, misses, total_clicks, elapsed_time, font)
-
 
 def mostrar_resultado(screen, score, misses, total_clicks, tiempo_total, font):
     precision = (score / total_clicks) * 100 if total_clicks > 0 else 0
